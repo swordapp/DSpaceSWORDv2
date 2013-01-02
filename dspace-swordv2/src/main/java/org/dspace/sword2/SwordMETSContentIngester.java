@@ -38,35 +38,24 @@ public class SwordMETSContentIngester extends AbstractSwordContentIngester
         return this.ingest(context, deposit, dso, verboseDescription, null);
     }
 
-	/* (non-Javadoc)
-	 * @see org.dspace.sword.SWORDIngester#ingest(org.dspace.core.Context, org.purl.sword.base.Deposit)
-	 */
-	public DepositResult ingest(Context context, Deposit deposit, DSpaceObject dso, VerboseDescription verboseDescription, DepositResult result)
-			throws DSpaceSwordException, SwordError
-	{
-        // FIXME: it's not clear how to make the METS ingester work over an existing item
-        
-		try
+    @Override
+    public DepositResult ingestToCollection(Context context, Deposit deposit, Collection collection, VerboseDescription verboseDescription, DepositResult result)
+            throws DSpaceSwordException, SwordError, SwordAuthException, SwordServerException
+    {
+        try
 		{
-			// first, make sure this is the right kind of ingester, and set the collection
-			if (!(dso instanceof Collection))
-			{
-				throw new DSpaceSwordException("Tried to run an ingester on wrong target type");
-			}
-			Collection collection = (Collection) dso;
-
 			// get deposited file as InputStream
 			File depositFile = deposit.getFile();
 
 			// load the plugin manager for the required configuration
-			String cfg = ConfigurationManager.getProperty("swordv2-server", "mets-ingester.package-ingester");
+			String cfg = ConfigurationManager.getProperty("sword-server", "mets-ingester.package-ingester");
 			if (cfg == null || "".equals(cfg))
 			{
 				cfg = "METS";  // default to METS
 			}
 			verboseDescription.append("Using package manifest format: " + cfg);
 
-			PackageIngester pi = (PackageIngester)PluginManager.getNamedPlugin("swordv2-server", PackageIngester.class, cfg);
+			PackageIngester pi = (PackageIngester) PluginManager.getNamedPlugin(PackageIngester.class, cfg);
 			verboseDescription.append("Loaded package ingester: " + pi.getClass().getName());
 
 			// the licence is either in the zip or the mets manifest.  Either way
@@ -75,34 +64,40 @@ public class SwordMETSContentIngester extends AbstractSwordContentIngester
 
 			// Initialize parameters to packager
 			PackageParameters params = new PackageParameters();
-			// Force package ingester to respect Collection workflows
-			params.setWorkflowEnabled(true);
 
-			// Should restore mode be enabled, i.e. keep existing handle?
-			if (ConfigurationManager.getBooleanProperty("swordv2-server", "restore-mode.enable",false))
-				params.setRestoreModeEnabled(true);
+            // Force package ingester to respect Collection workflows
+            params.setWorkflowEnabled(true);
+
+            // Should restore mode be enabled, i.e. keep existing handle?
+            if (ConfigurationManager.getBooleanProperty("sword-server", "restore-mode.enable",false))
+            {
+                params.setRestoreModeEnabled(true);
+            }
+
+            // Whether or not to use the collection template
+            params.setUseCollectionTemplate(ConfigurationManager.getBooleanProperty("mets.default.ingest.useCollectionTemplate", false));
 
 			// ingest the item from the temp file
 			DSpaceObject ingestedObject = pi.ingest(context, collection, depositFile, params, licence);
 			if (ingestedObject == null)
 			{
 				verboseDescription.append("Failed to ingest the package; throwing exception");
-				throw new SwordError(DSpaceUriRegistry.UNPACKAGE_FAIL, "METS package ingester failed to unpack package");
+                throw new SwordError(DSpaceUriRegistry.UNPACKAGE_FAIL, "METS package ingester failed to unpack package");
 			}
 
-			//Verify we have an Item as a result -- SWORD can only ingest Items
-			if (!(ingestedObject instanceof Item))
+            // Verify we have an Item as a result
+            if (!(ingestedObject instanceof Item))
 			{
-				throw new DSpaceSwordException("DSpace Ingester returned wrong object type -- not an Item result.");
+                throw new DSpaceSwordException("DSpace Ingester returned wrong object type -- not an Item result.");
 			}
-			else
-			{
-				//otherwise, we have an item, and a workflow should have already been started for it.
-				verboseDescription.append("Workflow process started");
-			}
+            else
+            {
+                //otherwise, we have an item, and a workflow should have already been started for it.
+                verboseDescription.append("Workflow process started");
+            }
 
 			// get reference to item so that we can report on it
-			Item installedItem = (Item)ingestedObject;
+			Item installedItem = (Item) ingestedObject;
 
 			// update the item metadata to inclue the current time as
 			// the updated date
@@ -142,30 +137,23 @@ public class SwordMETSContentIngester extends AbstractSwordContentIngester
 
 			return dr;
 		}
-		catch (RuntimeException re)
-		{
-			log.error("caught exception: ", re);
-			throw re;
-		}
-		catch (Exception e)
-		{
-			log.error("caught exception: ", e);
-			throw new DSpaceSwordException(e);
-		}
-	}
-
-    @Override
-    public DepositResult ingestToCollection(Context context, Deposit deposit, Collection collection, VerboseDescription verboseDescription, DepositResult result)
-            throws DSpaceSwordException, SwordError, SwordAuthException, SwordServerException
-    {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        catch (RuntimeException re)
+        {
+            log.error("caught exception: ", re);
+            throw re;
+        }
+        catch (Exception e)
+        {
+            log.error("caught exception: ", e);
+            throw new DSpaceSwordException(e);
+        }
     }
 
     @Override
     public DepositResult ingestToItem(Context context, Deposit deposit, Item item, VerboseDescription verboseDescription, DepositResult result)
             throws DSpaceSwordException, SwordError, SwordAuthException, SwordServerException
     {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return null;
     }
 
     /**
