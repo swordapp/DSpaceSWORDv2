@@ -19,6 +19,11 @@ import org.swordapp.server.UriRegistry;
 
 import java.sql.SQLException;
 
+/**
+ * This implementation of WorkflowManager is restricted and only allows UPDATE and DELETE operations
+ * on items which are not in workflow, in archive, or withdrawn.  These operations can only be
+ * performed on items which are in the deposit phase.
+ */
 public class WorkflowManagerDefault implements WorkflowManager
 {
 	public void retrieveServiceDoc(Context context) throws SwordError
