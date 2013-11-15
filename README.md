@@ -1,7 +1,10 @@
 DSpace SWORDv2 Enhanced Implementation
 ======================================
 
-This code is intended as a replacement for the default SWORDv2 implementation that ships with DSpace version 1.8.2 and 3.0.  It is derived from that original codebase, but incorporates bugfixes, overall enhancements, and further points of configuration.
+NOTE: this code has now been incorporated into the [DSpace 4.0 release](https://wiki.duraspace.org/display/DSPACE/DSpace+Release+4.0+Notes), 
+so if you are using that version you do not need this.
+
+This code is intended only as a replacement for the default SWORDv2 implementation that ships with DSpace version 1.8.2 and 3.0.  It is derived from that original codebase, but incorporates bugfixes, overall enhancements, and further points of configuration.
 
 Installation
 ------------
