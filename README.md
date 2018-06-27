@@ -13,7 +13,7 @@ The code should just be placed inside your DSpace source tree in replacement of 
 
 Be sure to read the documentation in-line in the new configuration file, and update the values appropriately before deploying.
 
-###METS Ingester
+### METS Ingester
 
 If you plan to use the METS ingester, you should replace the DSpaceMETSIngester in the PackageIngester part of the dspace.cfg file with the SwordMETSPackageIngester, so it should look as follows:
 
